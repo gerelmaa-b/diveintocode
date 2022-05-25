@@ -6,8 +6,6 @@ folded_thickness = thickness * 2**43
 print("Thickness: {} meters".format(folded_thickness))
 print("Thickness: {: .2f} kilometers".format(folded_thickness/1000))
 
-folded_thickness = thickness*2
-
 folded_thickness_list = []
 folded_thickness = thickness*2
 print(type(folded_thickness_list))
