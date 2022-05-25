@@ -58,6 +58,8 @@ def compute_days_to_live(n_rice, n_people=1):
     ----------------------
     n_days : int
         number of days to live
+        
+    It really depend on how long. To calculate days, I use information that a person eats three times a day.
     """
     n_days = n_rice/3*n_people
     return n_days
