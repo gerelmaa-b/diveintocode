@@ -11,7 +11,6 @@ from sklearn.metrics import accuracy_score
 class GetMiniBatch:
     """
     Iterator to get a mini-batch
-
     Parameters
     ----------
     X : ndarray, shape (n_samples, n_features)
@@ -29,7 +28,7 @@ class GetMiniBatch:
         shuffle_index = np.random.permutation(np.arange(X.shape[0]))
         self._X = X[shuffle_index]
         self._y = y[shuffle_index]
-        self._stop = np.ceil(X.shape[0]/self.batch_size).astype(np.int)
+        self._stop = np.ceil(X.shape[0]/self.batch_size).astype(np.int64)
 
     def __len__(self):
         return self._stop
@@ -108,14 +107,15 @@ class ScratchSimpleNeuralNetrowkClassifier():
         delta_b3 = np.sum(delta_a3, axis = 0)
         delta_W3 = np.dot(self.z2.T, delta_a3)
         delta_z2 = np.dot(delta_a3, self.W3.T)
+        
 
         self.W3 -= self.lr * delta_W3
         self.b3 -= self.lr * delta_b3
 
         # 2nd layer
-        if self.activation_function == 'sigmoid':
+        if self.activate_function == 'sigmoid':
             delta_a2 = delta_z2 * (1-self.activation_function(self.z2))*self.activation_function(self.z2)
-        elif self.activation_function == 'tanh':
+        elif self.activate_function == 'tanh':
             delta_a2 = delta_z2*(np.tanh(self.z2)**2)
 
         delta_b2 = np.sum(delta_a2, axis = 0)
@@ -132,7 +132,7 @@ class ScratchSimpleNeuralNetrowkClassifier():
             delta_a1 = delta_z1*(np.tanh(self.z1)**2)
 
         delta_b1 = np.sum(delta_a1, axis = 0)
-        delta_W1 = np.dot(X.T, delta_a2)
+        delta_W1 = np.dot(X.T, delta_a1)
 
         self.W1 -= self.lr * delta_W1
         self.b1 -= self.lr * delta_b1
@@ -159,6 +159,9 @@ class ScratchSimpleNeuralNetrowkClassifier():
         # the loss function for each epoch 
         self.log_loss = []
         self.log_loss_val = []
+
+        self.log_acc = []
+        self.log_acc_val = []
 
         for epoch in range(self.n_epoch):
             get_mini_batch = GetMiniBatch(X, y , batch_size = self.n_batch)
@@ -205,11 +208,8 @@ class ScratchSimpleNeuralNetrowkClassifier():
                 acc_val = accuracy_score(np.argmax(y_val, axis = 1), np.argmax(yhat_val, axis = 1))
                 self.log_acc_val.append(acc_val)
 
-
-        if self.verbose:
-            #verboseをTrueにした際は学習過程などを出力する
-            print('epoch:{:>3} loss:{:>8, .3f} acc:{:>5, .3f}'.format(epoch, self.loss/self.n_batch, acc))
-        pass
+            if self.verbose:
+                print('epoch:{} loss:{} acc:{}'.format(epoch, self.loss/self.n_batch, acc))        
 
     def predict(self, X):
         """
@@ -227,11 +227,8 @@ class ScratchSimpleNeuralNetrowkClassifier():
         """
 
         self.pred_z1 = self.activation_function(np.dot(X, self.W1) + self.b1)
-
-        self.pred_z2 = self.activation_function(np.dot(self.pred_z1, self.W2) + self.b2)
-        
+        self.pred_z2 = self.activation_function(np.dot(self.pred_z1, self.W2) + self.b2) 
         pred = np.argmax(np.dot(self.pred_z2, self.W3) + self.b3, axis=1)
-        
         return pred
 
 
@@ -262,7 +259,7 @@ plt.show()
 
 index = 0
 image = X_train[index].reshape(28,28)
-image = image.astype(np.float) # Convert to float type
+image = image.astype(np.float64) # Convert to float type
 image -= 105.35 # Try to create a negative number on purpose
 plt.imshow(image, 'gray')
 plt.title('label : {}'.format(y_train[index]))
@@ -279,22 +276,63 @@ print('X_train min value:', X_train.min()) # 0.0
 
 # the correct label is an integer from 0 to 9, but it is converted to a one-hot representation
 
-enc = OneHotEncoder(handle_unknown='ignore', sparse=False)
-y_train_one_hot = enc.fit_transform(y_train[:, np.newaxis])
-y_test_one_hot = enc.transform(y_test[:, np.newaxis])
-print("y_train label shape:", y_train.shape) # (60000,)
-print("y_train label shape of one hot encoder:", y_train_one_hot.shape) # (60000, 10) # float
-
 X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.2)
+enc = OneHotEncoder(handle_unknown='ignore', sparse=False)
+y_train_one_hot = enc.fit_transform(y_train.reshape(-1,1))
+y_val_one_hot = enc.fit_transform(y_val.reshape(-1,1))
 print("Train dataset:", X_train.shape) # (48000, 784)
 print("Validation dataset:", X_val.shape) # (12000, 784)
 
 ########################  Problem 5 ########################
 # Estimation
 
-clf = ScratchSimpleNeuralNetrowkClassifier(n_epoch = 50, n_features = 784, n_nodes1 = 400, n_nodes2 = 200, n_output = 10,
+clf = ScratchSimpleNeuralNetrowkClassifier(n_epoch = 25, n_features = 784, n_nodes1 = 400, n_nodes2 = 200, n_output = 10,
                 sigma = 0.01, n_batch = 20, activation_function = 'tanh', learning_rate = 0.01, verbose = True)
-clf.fit(X_train, y_train_one_hot, X_val, y_test_one_hot)
+clf.fit(X_train, y_train_one_hot, X_val, y_val_one_hot)
 y_pred = clf.predict(X_val)
-
 print(y_pred)
+
+
+################## Problem 6 ######################
+# Learning and estimation
+y_val_ = np.argmax(y_val_one_hot, axis = 1)
+print(y_val_.shape)
+acc = accuracy_score(y_val_, y_pred)
+print('accuracy:{}'.format(acc))
+
+################# Problem 7 #######################
+# Plot of learning curve
+
+fig = plt.subplots()
+plt.plot(clf.log_loss, 'g--')
+plt.plot(clf.log_loss_val, 'b--')
+plt.xlabel("epoch")
+plt.ylabel("Loss")
+plt.title('Learning curve')
+plt.show()
+
+fig = plt.subplots()
+plt.plot(clf.log_acc, 'g--')
+plt.plot(clf.log_acc_val, 'b--')
+plt.xlabel("epoch")
+plt.ylabel("Accuracy")
+plt.title('Learning curve')
+plt.show()
+
+################# Problem 8 ##################
+# (Advance task) Confirmation of misclassification
+
+num = 10
+
+true_false = y_pred==y_val_
+false_list = np.where(true_false==False)[0].astype(np.int)
+
+if false_list.shape[0] < num:
+    num = false_list.shape[0]
+fig = plt.figure(figsize=(6, 6))
+fig.subplots_adjust(left=0, right=0.8,  bottom=0, top=0.8, hspace=1, wspace=0.5)
+for i in range(num):
+    ax = fig.add_subplot(6, 6, i + 1, xticks=[], yticks=[])
+    ax.set_title("{} / {}".format(y_pred[false_list[i]],y_val_[false_list[i]]))
+    ax.imshow(X_val.reshape(-1,28,28)[false_list[i]], cmap='gray')
+plt.show()
