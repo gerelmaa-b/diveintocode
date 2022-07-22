@@ -98,7 +98,6 @@ class tanh():
   def backward(self, dZ):
     ret = dZ * (1-self.Z**2)
     return ret
-  
 
 class sigmoid():
   """
@@ -150,91 +149,7 @@ class ReLU():
     ret = np.where(self.A>0, dZ, 0)
     return ret
 
-class XavierInitializer:
-    """
-    Xavier initialization
-    """
 
-    def __init__(self):
-        pass
-
-    def W(self, n_nodes1, n_nodes2):
-        """
-        Weight initialization
-        Parameters
-        ----------
-        n_nodes1 : int
-          Number of nodes in the previous layer
-        n_nodes2 : int
-          Number of nodes in the later layer
-
-        Returns
-        ----------
-        W : ndarray shape with (n_nodes1, n_nodes2)
-          weights of hidden layer
-        """
-        W = np.random.randn(n_nodes1, n_nodes2)/np.sqrt(n_nodes1)
-        return W
-
-    def B(self, n_nodes2):
-        """
-        bias initializer
-        Parameters
-        ----------
-        n_nodes2 : int
-          Number of nodes in the later layer
-
-        Returns
-        ----------
-        B : ndarray shape with (n_nodes2, 1)
-          bias of hidden layer
-        """
-        B = np.zeros(n_nodes2)
-        return B
-
-class HeInitializer:
-    """
-    He initialization
-    """
-
-    def __init__(self):
-        pass
-
-    def W(self, n_nodes1, n_nodes2):
-        """
-        Weight initialization
-        Parameters
-        ----------
-        n_nodes1 : int
-          Number of nodes in the previous layer
-        n_nodes2 : int
-          Number of nodes in the later layer
-
-        Returns
-        ----------
-        W : ndarray shape with (n_nodes1, n_nodes2)
-          weights of hidden layer
-        """
-        W = np.random.randn(n_nodes1, n_nodes2)/np.sqrt(2/n_nodes1)
-        return W
-
-    def B(self, n_nodes2):
-        """
-        bias initializer
-        Parameters
-        ----------
-        n_nodes2 : int
-          Number of nodes in the later layer
-
-        Returns
-        ----------
-        B : ndarray shape with (n_nodes2, 1)
-          bias of hidden layer
-        """
-        B = np.zeros(n_nodes2)
-        return B
-
-class Adagrad:
   """
   stochastic gradient descent method
 
